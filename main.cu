@@ -21,20 +21,22 @@ DEVICE_KERNEL void plus_kernel(
     }
 }
 
-int main()
+template<int N, int M, int K = N, int L = M>
+void test()
 {
-    auto a_host = allocate_host_tensor<float>(Shape(2, 4, 5));
-    auto b_host = allocate_host_tensor<float>(Shape(2, 4, 5));
-    auto c_host = allocate_host_tensor<float>(Shape(2, 4, 5));
+    auto a_host = allocate_host_tensor<float>(Shape(N, M));
+    auto b_host = allocate_host_tensor<float>(Shape(K, L));
+    auto c_host = allocate_host_tensor<float>(Shape(N, M));
 
     auto a = allocate_device_tensor<float>(a_host.shape);
     auto b = allocate_device_tensor<float>(b_host.shape);
     auto c = allocate_device_tensor<float>(c_host.shape);
 
-    for (int i = 0; i < size(a); ++i)
+    const int count = size(a);
+    for (int i = 0; i < count; ++i)
     {
         a_host.data[i] = i;
-        b_host.data[i] = 5;
+        b_host.data[i] = count - i;
     }
 
     copy_to_device(a_host, a);
@@ -59,6 +61,11 @@ int main()
     free_host_tensor(a_host);
     free_host_tensor(b_host);
     free_host_tensor(c_host);
+}
 
+int main()
+{
+    test<3, 4, 3, 1>();
+    test<3, 4, 1, 4>();
     return 0;
 }

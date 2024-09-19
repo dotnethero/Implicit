@@ -21,6 +21,11 @@ struct Shape
             extents[i] = temp[i];
             strides[i] = strides[i + 1] * extents[i + 1];
         }
+        for (int i = rank - 1; i >= 0; --i)
+        {
+            if (extents[i] == 1)
+                strides[i] = 0;
+        }
     }
 };
 
