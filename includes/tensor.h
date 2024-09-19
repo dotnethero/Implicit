@@ -110,23 +110,44 @@ void print_tensor(const char* tag, const Tensor<Element, Shape> tensor)
 {
     std::cout << tag << " = " << std::endl;
     const auto count = size(tensor);
+
+    int products[Shape::Width] = {1};
+    int product = 1;
+    for (auto i = tensor.shape.rank - 1; i >= 0; --i)
+    {
+        product *= tensor.shape.extents[i];
+        products[i] = product;
+    }
+
     for (int i = 0; i < count; ++i)
     {
-        for (int j = 0; j < Shape::Width; ++j)
+        int opens = 0;
+        int closes = 0;
+        for (int j = 0; j < tensor.shape.rank; ++j)
         {
-            if (tensor.shape.strides[j] == 0 ||
-                tensor.shape.strides[j] == 1)
-                continue;
+            if ((i + 0) % products[j] == 0)
+                ++opens;
 
-            auto mod = i % tensor.shape.strides[j];
-            auto div = i / tensor.shape.strides[j];
-            if (div != 0 && mod == 0)
-            {
-                std::cout << std::endl;
-            }
+            if ((i + 1) % products[j] == 0)
+                ++closes;
         }
-        std::cout << std::setw(3) << tensor.data[i];
+
+        if (opens > 0)
+        {
+            for (int j = 0; j < tensor.shape.rank - opens; ++j)
+                std::cout << " ";
+        }
+
+        for (int j = 0; j < opens; ++j)
+            std::cout << "[";
+
+        std::cout << std::setw(4) << tensor.data[i];
+
+        for (int j = 0; j < closes; ++j)
+            std::cout << "]";
+
+        if (closes > 0)
+            std::cout << std::endl;
     }
-    std::cout << std::endl;
     std::cout << std::endl;
 }
