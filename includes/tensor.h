@@ -23,6 +23,12 @@ struct Tensor {
         const auto index = coords_to_index(coords..., shape);
         return data[index];
     }
+
+    template<typename... Coords>
+    DEVICE_FUNCTION const Element& operator()(const Coords... coords) const {
+        const auto index = coords_to_index(coords..., shape);
+        return data[index];
+    }
 };
 
 template<typename Element, typename Shape>

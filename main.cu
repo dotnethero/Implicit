@@ -21,8 +21,25 @@ DEVICE_KERNEL void plus_kernel(
     }
 }
 
+template<
+    typename ElementA,
+    typename LayoutA,
+    typename ElementC,
+    typename LayoutC>
+DEVICE_KERNEL void reduce_plus_kernel(
+    const Tensor<ElementA, LayoutA> a,
+          Tensor<ElementC, LayoutC> c)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < size(a))
+    {
+        auto coord = index_to_coords(i, a.shape);
+        atomicAdd(&c(coord), a(coord));
+    }
+}
+
 template<int N, int M, int K = N, int L = M>
-void test()
+void test_pw_broadcast()
 {
     auto a_host = allocate_host_tensor<float>(Shape(N, M));
     auto b_host = allocate_host_tensor<float>(Shape(K, L));
@@ -63,9 +80,48 @@ void test()
     free_host_tensor(c_host);
 }
 
+
+template<int N, int M, int K = N, int L = M>
+void test_reduce()
+{
+    auto a_host = allocate_host_tensor<float>(Shape(N, M));
+    auto c_host = allocate_host_tensor<float>(Shape(K, L));
+
+    auto a = allocate_device_tensor<float>(a_host.shape);
+    auto c = allocate_device_tensor<float>(c_host.shape);
+
+    const int count = size(a);
+    for (int i = 0; i < count; ++i)
+    {
+        a_host.data[i] = i;
+    }
+
+    copy_to_device(a_host, a);
+
+    dim3 block_size = 128;
+    dim3 grid_size = 2;
+    reduce_plus_kernel<<<grid_size, block_size>>>(a, c);
+
+    copy_to_host(c, c_host);
+
+    print_tensor("A", a_host);
+    print_tensor("C", c_host);
+
+    free_device_tensor(a);
+    free_device_tensor(c);
+
+    free_host_tensor(a_host);
+    free_host_tensor(c_host);
+}
+
 int main()
 {
-    test<3, 4, 3, 1>();
-    test<3, 4, 1, 4>();
+    // Broadcasting
+    test_pw_broadcast<3, 4, 3, 1>();
+    test_pw_broadcast<3, 4, 1, 4>();
+
+    // Reduction
+    test_reduce<3, 4, 3, 1>();
+    test_reduce<3, 4, 1, 4>();
     return 0;
 }

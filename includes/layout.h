@@ -47,7 +47,7 @@ DEVICE_FUNCTION int size(const Shape shape)
 }
 
 template<typename Shape>
-DEVICE_FUNCTION auto index_to_coords(const int index, const Shape shape)
+DEVICE_FUNCTION auto& index_to_coords(const int index, const Shape shape)
 {
     int leftover = index;
     int coords[Shape::Width];
