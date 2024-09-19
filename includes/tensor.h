@@ -17,16 +17,14 @@ struct Tensor {
     {
     }
 
-    template<typename... Coords>
-    DEVICE_FUNCTION Element& operator()(const Coords... coords)
+    DEVICE_FUNCTION Element& operator()(const int coords[])
     {
-        const auto index = coords_to_index(coords..., shape);
+        const int index = coords_to_index(coords, shape);
         return data[index];
     }
 
-    template<typename... Coords>
-    DEVICE_FUNCTION const Element& operator()(const Coords... coords) const {
-        const auto index = coords_to_index(coords..., shape);
+    DEVICE_FUNCTION Element operator()(const int coords[]) const {
+        const int index = coords_to_index(coords, shape);
         return data[index];
     }
 };
