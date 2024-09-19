@@ -1,4 +1,5 @@
 #include "kernels.h"
+#include "operations.h"
 
 template<int N, int M, int K = N, int L = M>
 void test_pw_broadcast()
@@ -23,7 +24,7 @@ void test_pw_broadcast()
 
     dim3 block_size = 128;
     dim3 grid_size = 1;
-    plus_kernel<<<grid_size, block_size>>>(a, b, c);
+    broadcast_kernel<OpPlus><<<grid_size, block_size>>>(a, b, c);
 
     copy_to_host(a, a_host);
     copy_to_host(b, b_host);
@@ -62,7 +63,7 @@ void test_reduce()
 
     dim3 block_size = 128;
     dim3 grid_size = 2;
-    reduce_plus_kernel<<<grid_size, block_size>>>(a, c);
+    reduce_kernel<OpPlus><<<grid_size, block_size>>>(a, c);
 
     copy_to_host(c, c_host);
 
@@ -104,7 +105,7 @@ void test_matmul()
 
     dim3 block_size = 128;
     dim3 grid_size = 2;
-    matmul_kernel<<<grid_size, block_size>>>(problem, a, b, c);
+    contract_kernel<OpMultiply, OpPlus><<<grid_size, block_size>>>(problem, a, b, c);
 
     copy_to_host(c, c_host);
 
